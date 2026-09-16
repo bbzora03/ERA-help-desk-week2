@@ -15,14 +15,6 @@ app.get("/", (req, res) => {
     res.json({ message: "ERA Tech Solutions Help Desk API is running" });
 });
 
-// Start server — waits for MongoDB before listening
-async function startServer() {
-    await connectMongo();
-    app.listen(PORT, () => {
-        console.log(`Server running at http://localhost:${PORT}`);
-    });
-}
-
 // GET departments -- returns all departments
 app.get("/departments", (req, res) => {
     const sql = "SELECT * FROM departments";
@@ -111,6 +103,26 @@ app.get("/ticket-notes/:ticketId", async (req,res) => {
         res.status(500).json({error: "failed to get notes for ticket"});
     }
 });
+
+// GET activity-logs -- returns all activity logs from MongoDB
+app.get("/activity-logs", async (req, res) => {
+    try {
+        const mongoDb = getMongo();
+        const logs = await mongoDb.collection("activity_logs").find({}).sort({timestamp:-1}).toArray();
+        res.json(logs);
+    } catch (error) {
+        console.error("Error getting activity logs:", error);
+        res.status(500).json({ error: "Failed to get activity logs" });
+    }
+});
+
+// Start server — waits for MongoDB before listening
+async function startServer() {
+    await connectMongo();
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+}
 
 startServer();
 
